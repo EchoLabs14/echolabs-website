@@ -1,0 +1,19 @@
+# Local Claude Code / preview tooling (not part of the site)
+.claude/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Preview build artifacts (generated; not part of the deployed site)
+_preview/
+*.zip
+build-preview.js
