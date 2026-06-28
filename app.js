@@ -21,19 +21,47 @@
   /* ============================================================
      CONFIG WIRING
      ============================================================ */
-  // Book-a-call links -> Calendly
+  // Book-a-call links -> Calendly popup (opens over the site; no new tab)
   if (CFG.CALENDLY_URL) {
-    $$('[data-book]').forEach(a => {
-      a.setAttribute('href', CFG.CALENDLY_URL);
-      a.setAttribute('target', '_blank');
-      a.setAttribute('rel', 'noopener');
+    const bookLinks = $$('[data-book]');
+    // Defer the Calendly widget (CSS+JS) until a visitor shows booking intent,
+    // so it never competes with first paint for the majority who never book.
+    let calendlyRequested = false;
+    const loadCalendly = () => {
+      if (calendlyRequested) return; calendlyRequested = true;
+      const css = document.createElement('link');
+      css.rel = 'stylesheet'; css.href = 'https://assets.calendly.com/assets/external/widget.css';
+      document.head.appendChild(css);
+      const s = document.createElement('script');
+      s.src = 'https://assets.calendly.com/assets/external/widget.js'; s.async = true;
+      document.body.appendChild(s);
+    };
+    bookLinks.forEach(a => {
+      a.setAttribute('href', CFG.CALENDLY_URL);   // same-tab fallback if the widget hasn't loaded
+      a.removeAttribute('target');
+      a.removeAttribute('rel');
+      a.addEventListener('mouseenter', loadCalendly, { once: true }); // warm on hover/focus intent
+      a.addEventListener('focus', loadCalendly, { once: true });
+      a.addEventListener('click', (e) => {
+        loadCalendly();
+        if (window.Calendly && typeof window.Calendly.initPopupWidget === 'function') {
+          e.preventDefault();
+          window.Calendly.initPopupWidget({ url: CFG.CALENDLY_URL });
+        }
+        // otherwise the same-tab href fallback opens Calendly directly
+      });
     });
   }
-  // Email links
+  // Email links -> Gmail web compose (reliable redirect; opens over the site in a new tab).
+  // mailto alone silently fails when no desktop mail client is configured.
   if (CFG.EMAIL) {
     $$('[data-email]').forEach(a => {
       const subj = a.getAttribute('data-email-subject') || 'Project inquiry — EchoLabs';
-      a.setAttribute('href', `mailto:${CFG.EMAIL}?subject=${encodeURIComponent(subj)}`);
+      const to = encodeURIComponent(CFG.EMAIL);
+      const su = encodeURIComponent(subj);
+      a.setAttribute('href', `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${su}`);
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
       const slot = a.querySelector('[data-email-text]');
       if (slot) slot.textContent = CFG.EMAIL;
     });
@@ -74,14 +102,27 @@
   const toggle = $('.nav__toggle');
   const menu = $('.menu');
   if (toggle && menu) {
+    const menuFocusables = () => $$('a, button', menu).filter(el => el.offsetParent !== null);
     const setMenu = (open) => {
       document.body.classList.toggle('menu-open', open);
       toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
       menu.setAttribute('aria-hidden', String(!open));
+      if (open) { const f = menuFocusables(); if (f[0]) f[0].focus(); }
+      else { toggle.focus(); }
     };
     toggle.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
     menu.addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
-    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+    window.addEventListener('keydown', (e) => {
+      if (!document.body.classList.contains('menu-open')) return;
+      if (e.key === 'Escape') { setMenu(false); return; }
+      if (e.key === 'Tab') {
+        const f = menuFocusables(); if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
   }
 
   /* ============================================================
@@ -91,6 +132,17 @@
     const group = track.firstElementChild;
     if (group) { const clone = group.cloneNode(true); clone.setAttribute('aria-hidden', 'true'); track.appendChild(clone); }
   });
+
+  /* ============================================================
+     CONTENT FLYWHEEL — rotated polygon spiral
+     ============================================================ */
+  const fwSpin = $('.fw-spin');
+  if (fwSpin) {
+    const pts = '200,55 345,200 200,345 55,200';
+    let poly = '';
+    for (let r = 0; r <= 88; r += 4) poly += `<polygon points="${pts}" transform="rotate(${r} 200 200)"/>`;
+    fwSpin.innerHTML = poly;
+  }
 
   /* ============================================================
      GENERIC SCROLL REVEAL
@@ -143,8 +195,8 @@
   /* ============================================================
      COUNT-UP STATS
      ============================================================ */
-  const statsGrid = $('[data-stats]');
-  if (statsGrid) {
+  const statsGrids = $$('[data-stats]');
+  if (statsGrids.length) {
     const so = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (!e.isIntersecting) return;
@@ -152,20 +204,21 @@
         $$('[data-count]', e.target).forEach(el => {
           const target = parseFloat(el.dataset.count);
           const dec = parseInt(el.dataset.dec || '0', 10);
-          if (reduceMotion) { el.textContent = target.toFixed(dec); return; }
+          const fmt = (v) => Number(v.toFixed(dec)).toLocaleString('en-US');
+          if (reduceMotion) { el.textContent = fmt(target); return; }
           const dur = 1500; let start = null;
           const tick = (t) => {
             if (start === null) start = t;
             const p = Math.min((t - start) / dur, 1);
             const eased = 1 - Math.pow(1 - p, 3);
-            el.textContent = (target * eased).toFixed(dec);
-            if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toFixed(dec);
+            el.textContent = fmt(target * eased);
+            if (p < 1) requestAnimationFrame(tick); else el.textContent = fmt(target);
           };
           requestAnimationFrame(tick);
         });
       });
     }, { threshold: 0.4 });
-    so.observe(statsGrid);
+    statsGrids.forEach(g => so.observe(g));
   }
 
   /* ============================================================
@@ -234,9 +287,9 @@
   }
 
   /* ============================================================
-     ECHO CURSOR
+     ECHO CURSOR (desktop pointer only — never runs on touch/mobile)
      ============================================================ */
-  if (finePointer && !reduceMotion) {
+  if (!reduceMotion && finePointer) {
     const cursor = $('.cursor');
     if (cursor) {
       const dot = $('.cursor__dot', cursor);
@@ -245,19 +298,22 @@
         { el: $('.cursor__r2', cursor), x:0, y:0, ease:0.20, base:24, hover:32 },
       ];
       let mx = innerWidth / 2, my = innerHeight / 2, dx = mx, dy = my, hovering = false, active = false;
-      window.addEventListener('mousemove', (e) => {
-        mx = e.clientX; my = e.clientY;
-        if (!active) { active = true; document.body.classList.add('cursor-on'); }
-      });
+      let running = false, lastMove = -1e9;
+      const kick = () => { if (!running) { running = true; requestAnimationFrame(render); } };
+      const point = (x, y) => { mx = x; my = y; lastMove = performance.now(); if (!active) { active = true; document.body.classList.add('cursor-on'); } kick(); };
+      window.addEventListener('mousemove', (e) => point(e.clientX, e.clientY));
       window.addEventListener('mouseout', (e) => { if (!e.relatedTarget) document.body.classList.remove('cursor-on'); });
       window.addEventListener('mouseover', () => { if (active) document.body.classList.add('cursor-on'); });
       const interactive = 'a, button, .srow, .tier, .roster__cell, input, select, textarea, summary, [tabindex]';
-      document.addEventListener('mouseover', (e) => { if (e.target.closest(interactive)) hovering = true; });
-      document.addEventListener('mouseout',  (e) => { if (e.target.closest(interactive)) hovering = false; });
+      document.addEventListener('mouseover', (e) => { if (e.target.closest(interactive)) { hovering = true; kick(); } });
+      document.addEventListener('mouseout',  (e) => { if (e.target.closest(interactive)) { hovering = false; kick(); } });
       const lerp = (a, b, n) => a + (b - a) * n;
-      const render = () => {
+      const near = (a, b) => Math.abs(a - b) < 0.4;
+      const IDLE_MS = 600;
+      function render() {
         dx = lerp(dx, mx, 0.7); dy = lerp(dy, my, 0.7);
         dot.style.transform = `translate(${dx}px, ${dy}px) translate(-50%,-50%)`;
+        let settled = near(dx, mx) && near(dy, my);
         rings.forEach(r => {
           r.x = lerp(r.x, mx, r.ease); r.y = lerp(r.y, my, r.ease);
           const target = hovering ? r.hover : r.base;
@@ -266,11 +322,66 @@
           r.el.dataset.size = ns;
           r.el.style.width = ns + 'px'; r.el.style.height = ns + 'px';
           r.el.style.transform = `translate(${r.x}px, ${r.y}px) translate(-50%,-50%)`;
+          if (!near(r.x, mx) || !near(r.y, my) || !near(ns, target)) settled = false;
         });
+        // Sleep the loop once everything has settled and there's been no recent movement.
+        if (settled && (performance.now() - lastMove) > IDLE_MS) { running = false; return; }
         requestAnimationFrame(render);
-      };
-      render();
+      }
     }
+  }
+
+  /* ============================================================
+     EMBEDS (Instagram reels + LinkedIn) — robust lazy load.
+     IntersectionObserver can fail to fire on horizontal rails / some mobile
+     browsers, leaving embeds blank. Use viewport geometry checked on real
+     page + rail scroll instead, with a buffer so they load just before view.
+     ============================================================ */
+  (() => {
+    const reveal = f => {
+      if (f.src || !f.dataset.src) return;
+      const box = f.closest('.reelcard__embed, .li-card__embed');
+      f.addEventListener('load', () => { if (box) box.classList.add('is-loaded'); }, { once: true });
+      f.src = f.dataset.src;
+    };
+    // When a group's container nears the viewport, load ALL of its embeds (staggered)
+    // so every preview renders. Per-iframe lazy-load (IO / loading=lazy) is unreliable
+    // for horizontally-scrolled rails and some mobile browsers, which left reels blank.
+    const watch = (container, frames, step) => {
+      if (!container || !frames.length) return;
+      let done = false;
+      const trigger = () => {
+        if (done) return;
+        const r = container.getBoundingClientRect();
+        if (r.top < window.innerHeight + 400 && r.bottom > -300) {
+          done = true;
+          frames.forEach((f, i) => setTimeout(() => reveal(f), i * step));
+          window.removeEventListener('scroll', onScroll);
+          window.removeEventListener('resize', onScroll);
+        }
+      };
+      const onScroll = () => requestAnimationFrame(trigger);
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+      trigger();
+    };
+    $$('[data-reelrail]').forEach(rail => watch(rail, $$('.reelcard__embed iframe[data-src]', rail), 130));
+    watch(document.querySelector('.li-rail'), $$('.li-card__embed iframe[data-src]'), 200);
+  })();
+
+  /* ============================================================
+     TOUCH: the LinkedIn text embeds are pointer-events:none on touch so the page
+     can scroll; a tap opens the post via its CTA link. (Reels stay interactive
+     so they play in place — handled by Instagram's own player.)
+     ============================================================ */
+  if (window.matchMedia('(hover:none),(pointer:coarse)').matches) {
+    $$('.li-card__embed').forEach(box => {
+      box.addEventListener('click', () => {
+        const card = box.closest('.li-card');
+        const cta = card && card.querySelector('a[href]');
+        if (cta && cta.href) window.open(cta.href, '_blank', 'noopener');
+      });
+    });
   }
 
   /* ============================================================
@@ -337,13 +448,107 @@
       if (e.key === 'ArrowLeft')  { go(i - 1); e.preventDefault(); }
       if (e.key === 'ArrowRight') { go(i + 1); e.preventDefault(); }
     });
-    // Touch swipe
-    let sx = 0, sdx = 0, swiping = false;
+    // Touch swipe + click/tap-to-advance
+    let sx = 0, sdx = 0, swiping = false, suppressClick = false;
     const vp = $('.deck__viewport', deck) || deck;
+    vp.style.cursor = 'pointer';
     vp.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sdx = 0; swiping = true; }, { passive: true });
     vp.addEventListener('touchmove',  (e) => { if (swiping) sdx = e.touches[0].clientX - sx; }, { passive: true });
-    vp.addEventListener('touchend',   () => { if (Math.abs(sdx) > 40) go(i + (sdx < 0 ? 1 : -1)); swiping = false; });
+    vp.addEventListener('touchend',   () => {
+      if (Math.abs(sdx) > 40) { go(i + (sdx < 0 ? 1 : -1)); suppressClick = true; setTimeout(() => { suppressClick = false; }, 400); }
+      swiping = false;
+    });
+    // Clicking/tapping the slide itself advances — but never swallow real links/buttons (e.g. the CTA)
+    vp.addEventListener('click', (e) => {
+      if (suppressClick) return;
+      if (e.target.closest('a, button')) return;
+      go(i + 1);
+    });
     go(0);
+  });
+
+  /* ============================================================
+     WORK PAGE — Reels coverflow carousel
+     Centred reel is in focus & interactive; neighbours angle back in 3D.
+     Move with the bottom controls, arrow keys, swipe, or by tapping a side card.
+     ============================================================ */
+  $$('[data-reelcarousel]').forEach(car => {
+    const viewport = $('.reelviewport', car);
+    const rail     = $('.reelrail', car);
+    const cards    = $$('.reelcard', car);
+    const prevBtns = $$('[data-reel-prev]', car);
+    const nextBtns = $$('[data-reel-next]', car);
+    const brandEl  = $('[data-reel-brand]', car);
+    if (!viewport || !rail || cards.length === 0) return;
+
+    let idx = 0;
+    const last = cards.length - 1;
+
+    function layout() {
+      const vpW = viewport.clientWidth;
+      const active = cards[idx];
+      const center = active.offsetLeft + active.offsetWidth / 2;
+      rail.style.transform = `translateX(${Math.round(vpW / 2 - center)}px)`;
+
+      cards.forEach((c, i) => {
+        const off = i - idx;
+        const a = Math.abs(off);
+        let scale = 1, rot = 0, op = 1, tz = 0, px = 0;
+        if (a >= 1) {
+          scale = a === 1 ? 0.86 : 0.74;
+          op    = a === 1 ? 0.72 : 0.4;
+          rot   = (off < 0 ? 1 : -1) * (a === 1 ? 20 : 26);
+          tz    = -(a * 70);
+          px    = -off * (a === 1 ? 30 : 50);
+        }
+        if (reduceMotion) { rot = 0; tz = 0; px = 0; scale = a >= 1 ? 0.9 : 1; }
+        c.style.transform = `translateX(${px}px) translateZ(${tz}px) rotateY(${rot}deg) scale(${scale})`;
+        c.style.opacity = op;
+        c.style.zIndex = String(100 - a);
+        const isActive = off === 0;
+        c.toggleAttribute('data-active', isActive);
+        c.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        $$('a, button', c).forEach(el => { el.tabIndex = isActive ? 0 : -1; });
+      });
+
+      if (brandEl && active) {
+        const name = active.querySelector('.reelcard__name');
+        if (name) brandEl.textContent = name.textContent;
+      }
+      prevBtns.forEach(b => { b.disabled = idx === 0; });
+      nextBtns.forEach(b => { b.disabled = idx === last; });
+    }
+
+    function go(n) { idx = Math.max(0, Math.min(last, n)); layout(); }
+
+    prevBtns.forEach(b => b.addEventListener('click', () => go(idx - 1)));
+    nextBtns.forEach(b => b.addEventListener('click', () => go(idx + 1)));
+
+    // Tap a side card to bring it to the centre
+    cards.forEach((c, i) => {
+      c.addEventListener('click', (e) => {
+        if (i === idx) return;                 // active card: let the reel/CTA handle it
+        if (e.target.closest('a')) return;
+        go(i);
+      });
+    });
+
+    // Keyboard
+    car.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft')  { go(idx - 1); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { go(idx + 1); e.preventDefault(); }
+    });
+
+    // Swipe
+    let sx = 0, sdx = 0, swiping = false;
+    viewport.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sdx = 0; swiping = true; }, { passive: true });
+    viewport.addEventListener('touchmove',  (e) => { if (swiping) sdx = e.touches[0].clientX - sx; }, { passive: true });
+    viewport.addEventListener('touchend',   () => { if (Math.abs(sdx) > 40) go(idx + (sdx < 0 ? 1 : -1)); swiping = false; });
+
+    let rt;
+    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(layout, 120); }, { passive: true });
+    window.addEventListener('load', layout);
+    layout();
   });
 
   /* ============================================================

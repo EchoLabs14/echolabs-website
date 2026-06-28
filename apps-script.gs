@@ -46,6 +46,7 @@ function doPost(e) {
     data = parseBody(e);
 
     // Route by the "type" field. Anything containing "creator" -> creator sheet.
+    if (!String(data.type || '').trim()) Logger.log('Note: submission with empty "type" (routed as brand): ' + (data.email || 'unknown'));
     var isCreator = String(data.type || '').toLowerCase().indexOf('creator') > -1;
     var sheetId   = isCreator ? SHEETS.creator : SHEETS.brand;
 
@@ -93,31 +94,55 @@ function sendThankYou(data, isCreator) {
   if (MailApp.getRemainingDailyQuota() <= 0) { Logger.log('Email quota exhausted; skipped: ' + to); return; }
 
   var firstName = String(data.name || '').trim().split(/\s+/)[0] || 'there';
+  var company   = String(data.company || '').trim();
   var subject   = 'Thanks for reaching out to ' + BRAND_NAME;
 
-  var intro = isCreator
-    ? "Thanks for your interest in joining the " + BRAND_NAME + " Creator Network. We review every application personally, and our team will be in touch soon."
-    : "Thanks for reaching out to " + BRAND_NAME + ". We've received your details and our team will get in touch with you shortly.";
+  // Copy differs for brands vs creators. Creators do NOT get a "book a call" CTA.
+  var introText, introHtml, midPara, replyText, replyHtml, hasCta;
+
+  if (isCreator) {
+    introText = "Thanks for your interest in joining the " + BRAND_NAME + " Creator Network. We read every application ourselves.";
+    introHtml = introText;
+    midPara   = "When a paid brief comes up that genuinely fits your niche, we'll be in touch. Until then, keep making work you're proud of.";
+    replyText = "Questions in the meantime? Just reply to this email (" + REPLY_TO + ").";
+    replyHtml = "Questions in the meantime? Just reply to this email — it reaches us at " + REPLY_TO + ".";
+    hasCta    = false;
+  } else {
+    var compText = company ? (" It's great to meet the team at " + company + ".") : "";
+    var compHtml = company ? (" It's great to meet the team at <strong>" + escapeHtml(company) + "</strong>.") : "";
+    introText = "Thanks for reaching out to " + BRAND_NAME + "." + compText + " We've got your details, and someone from the team will be in touch shortly.";
+    introHtml = "Thanks for reaching out to " + BRAND_NAME + "." + compHtml + " We've got your details, and someone from the team will be in touch shortly.";
+    midPara   = "Want to get moving sooner? Pick a time that suits you and we'll dig into your goals, your audience, and the content that gets you there.";
+    replyText = "Or just reply to this email (" + REPLY_TO + ").";
+    replyHtml = "Or just reply to this email — it reaches us at " + REPLY_TO + ".";
+    hasCta    = true;
+  }
+
+  var ctaHtml = hasCta
+    ? '<a href="' + CALENDLY_URL + '" style="display:inline-block;background:#121110;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:15px 26px;border-radius:100px;">Book a discovery call &rarr;</a>'
+    : '';
 
   var htmlBody =
     '<div style="margin:0;padding:0;background:#F3F0E8;">' +
       '<div style="max-width:560px;margin:0 auto;padding:40px 28px;font-family:Arial,Helvetica,sans-serif;color:#121110;">' +
-        '<div style="font-size:20px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;">' + BRAND_NAME + '</div>' +
+        '<div style="font-size:20px;font-weight:800;letter-spacing:-.02em;">' + BRAND_NAME + '</div>' +
         '<div style="height:4px;width:64px;margin:14px 0 28px;background:linear-gradient(90deg,#FF4A24,#7B3DFF 55%,#3A2BE8);border-radius:4px;"></div>' +
         '<p style="font-size:18px;line-height:1.5;margin:0 0 16px;">Hi ' + escapeHtml(firstName) + ',</p>' +
-        '<p style="font-size:16px;line-height:1.6;color:#3a3833;margin:0 0 22px;">' + intro + '</p>' +
-        '<p style="font-size:16px;line-height:1.6;color:#3a3833;margin:0 0 28px;">Want to move faster? Grab a time that works for you and let’s talk through your one idea — and the echoes it could become.</p>' +
-        '<a href="' + CALENDLY_URL + '" style="display:inline-block;background:#121110;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:15px 26px;border-radius:100px;">Book a discovery call &rarr;</a>' +
-        '<p style="font-size:13px;line-height:1.6;color:#6E6A60;margin:30px 0 0;">Or reply directly to this email — it reaches us at ' + REPLY_TO + '.</p>' +
+        '<p style="font-size:16px;line-height:1.6;color:#3a3833;margin:0 0 22px;">' + introHtml + '</p>' +
+        '<p style="font-size:16px;line-height:1.6;color:#3a3833;margin:0 0 ' + (hasCta ? '28px' : '22px') + ';">' + midPara + '</p>' +
+        ctaHtml +
+        '<p style="font-size:13px;line-height:1.6;color:#6E6A60;margin:' + (hasCta ? '30px' : '0') + ' 0 0;">' + replyHtml + '</p>' +
         '<p style="font-size:13px;line-height:1.6;color:#6E6A60;margin:22px 0 0;">— The ' + BRAND_NAME + ' team</p>' +
         '<div style="margin-top:28px;padding-top:18px;border-top:1px solid #E0DBCF;font-size:12px;color:#9a958a;">' + BRAND_NAME + ' — a content-first growth partner. The creator is not the strategy. The content is.</div>' +
       '</div>' +
     '</div>';
 
   var plain =
-    'Hi ' + firstName + ',\n\n' + intro + '\n\n' +
-    'Book a discovery call: ' + CALENDLY_URL + '\n\n' +
-    'Or just reply to this email (' + REPLY_TO + ').\n\n— The ' + BRAND_NAME + ' team';
+    'Hi ' + firstName + ',\n\n' +
+    introText + '\n\n' +
+    midPara + '\n\n' +
+    (hasCta ? ('Book a discovery call: ' + CALENDLY_URL + '\n\n') : '') +
+    replyText + '\n\n— The ' + BRAND_NAME + ' team';
 
   MailApp.sendEmail({
     to: to,
