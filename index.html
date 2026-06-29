@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=20260629" />
+<link rel="stylesheet" href="styles.css?v=20260629-2" />
 </head>
 <body>
 <svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="logoGrad" gradientUnits="userSpaceOnUse" x1="1" y1="8" x2="25" y2="24"><stop offset="0" stop-color="#FF4A24"/><stop offset="0.55" stop-color="#7B3DFF"/><stop offset="1" stop-color="#3A2BE8"/></linearGradient></defs></svg>
@@ -108,19 +108,31 @@
     </div>
   </div>
   <div class="wrap belief__viz reveal">
-    <svg viewBox="0 0 1180 250" class="diffviz" role="img" aria-label="The EchoLabs idea echoing out into a reel, a carousel and a post" preserveAspectRatio="xMidYMid meet">
+    <svg viewBox="0 0 1180 250" class="diffviz" role="img" aria-label="The EchoLabs idea echoing out into an Instagram Reel, a YouTube Short and a LinkedIn post" preserveAspectRatio="xMidYMid meet">
       <defs>
+        <!-- one brand gradient, used everywhere for uniformity -->
         <linearGradient id="dvg" x1="60" y1="0" x2="1100" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#FF4A24"/><stop offset="0.5" stop-color="#7B3DFF"/><stop offset="1" stop-color="#3A2BE8"/>
+          <stop offset="0" stop-color="#FF4A24"/><stop offset="0.55" stop-color="#7B3DFF"/><stop offset="1" stop-color="#3A2BE8"/>
         </linearGradient>
-        <!-- exact EchoLabs logo gradient, scoped to the mark's own box (matches the brand mark) -->
+        <!-- exact EchoLabs logo gradient, scoped to the mark's own box -->
         <linearGradient id="dvgMark" x1="2" y1="6" x2="22" y2="26" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FF4A24"/><stop offset="0.55" stop-color="#7B3DFF"/><stop offset="1" stop-color="#3A2BE8"/>
+        </linearGradient>
+        <!-- per-element gradient: every accent shows the full coral→violet→blue, so the palette stays uniform -->
+        <linearGradient id="dvgBox" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#FF4A24"/><stop offset="0.55" stop-color="#7B3DFF"/><stop offset="1" stop-color="#3A2BE8"/>
         </linearGradient>
         <linearGradient id="dvgText" x1="96" y1="0" x2="204" y2="0" gradientUnits="userSpaceOnUse">
           <stop offset="0" stop-color="#FF4A24"/><stop offset="0.5" stop-color="#7B3DFF"/><stop offset="1" stop-color="#3A2BE8"/>
         </linearGradient>
+        <linearGradient id="dvgText2" x1="734" y1="0" x2="886" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#FF4A24"/><stop offset="0.5" stop-color="#7B3DFF"/><stop offset="1" stop-color="#3A2BE8"/>
+        </linearGradient>
+        <filter id="dvCard" x="-20%" y="-20%" width="140%" height="170%">
+          <feDropShadow dx="0" dy="9" stdDeviation="11" flood-color="#121110" flood-opacity="0.10"/>
+        </filter>
       </defs>
+
       <!-- ONE IDEA: the EchoLabs echo mark (exact logo gradient) as the source of every echo -->
       <g transform="translate(110 32) scale(5)">
         <circle cx="5" cy="16" r="2.4" fill="url(#dvgMark)"/>
@@ -129,39 +141,55 @@
         <path d="M13.72 2.6 A 16 16 0 0 1 13.72 29.4" fill="none" stroke="url(#dvgMark)" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.1 4.1" opacity="0.6"/>
       </g>
       <text x="150" y="229" text-anchor="middle" class="dv-hero" fill="url(#dvgText)">One idea</text>
+
       <!-- flow lines: the echoes travelling out -->
-      <g fill="none" stroke="url(#dvg)" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="2 7" opacity="0.5">
+      <g fill="none" stroke="url(#dvg)" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="2 7" opacity="0.45">
         <path d="M205 105 C 340 80, 430 82, 552 90"/>
         <path d="M205 125 C 350 125, 430 125, 552 125"/>
         <path d="M205 145 C 340 170, 430 168, 552 160"/>
       </g>
-      <!-- REEL -->
-      <rect x="560" y="40" width="150" height="170" rx="18" fill="#fff" stroke="#121110" stroke-opacity="0.12"/>
-      <circle cx="635" cy="118" r="30" fill="none" stroke="url(#dvg)" stroke-width="3"/>
-      <path d="M627 103 L 627 133 L 652 118 Z" fill="url(#dvg)"/>
-      <rect x="582" y="176" width="78" height="6" rx="3" fill="#121110" opacity="0.14"/>
-      <rect x="582" y="176" width="44" height="6" rx="3" fill="url(#dvg)"/>
-      <!-- CAROUSEL -->
-      <rect x="735" y="40" width="150" height="170" rx="18" fill="#fff" stroke="#121110" stroke-opacity="0.12"/>
-      <rect x="772" y="70" width="86" height="92" rx="10" fill="none" stroke="#121110" stroke-opacity="0.22"/>
-      <rect x="758" y="80" width="86" height="92" rx="10" fill="#fff" stroke="url(#dvg)" stroke-width="2"/>
-      <path d="M768 150 L 786 128 L 800 142 L 818 118 L 834 150 Z" fill="url(#dvg)" opacity="0.85"/>
-      <circle cx="775" cy="100" r="6" fill="url(#dvg)"/>
-      <circle cx="795" cy="190" r="4" fill="url(#dvg)"/>
-      <circle cx="811" cy="190" r="4" fill="#121110" opacity="0.2"/>
-      <circle cx="827" cy="190" r="4" fill="#121110" opacity="0.2"/>
-      <!-- POST -->
-      <rect x="910" y="40" width="150" height="170" rx="18" fill="#fff" stroke="#121110" stroke-opacity="0.12"/>
-      <circle cx="945" cy="78" r="13" fill="url(#dvg)" opacity="0.22"/>
-      <circle cx="945" cy="78" r="13" fill="none" stroke="url(#dvg)" stroke-width="2"/>
-      <rect x="967" y="71" width="58" height="7" rx="3.5" fill="#121110" opacity="0.55"/>
-      <rect x="967" y="84" width="38" height="6" rx="3" fill="#121110" opacity="0.25"/>
-      <rect x="932" y="110" width="106" height="7" rx="3.5" fill="#121110" opacity="0.2"/>
-      <rect x="932" y="126" width="92" height="7" rx="3.5" fill="#121110" opacity="0.2"/>
-      <rect x="932" y="142" width="64" height="7" rx="3.5" fill="#121110" opacity="0.2"/>
-      <path d="M939 184 c -6 -6 2 -15 7 -9 c 5 -6 13 3 7 9 l -7 7 z" fill="url(#dvg)"/>
-      <circle cx="972" cy="183" r="6.5" fill="none" stroke="#121110" stroke-opacity="0.3" stroke-width="2"/>
-      <text x="810" y="234" text-anchor="middle" class="dv-tag">INFINITE ECHOES</text>
+
+      <!-- INSTAGRAM REEL -->
+      <rect x="560" y="40" width="150" height="170" rx="18" fill="#fff" stroke="#121110" stroke-opacity="0.06" filter="url(#dvCard)"/>
+      <g transform="translate(575 54)" fill="none" stroke="url(#dvgBox)" stroke-width="2.2" stroke-linecap="round">
+        <rect x="0.6" y="0.6" width="18.8" height="18.8" rx="6"/>
+        <circle cx="10" cy="10" r="4.4"/>
+      </g>
+      <circle cx="590.5" cy="58" r="1.6" fill="url(#dvgBox)"/>
+      <circle cx="635" cy="110" r="23" fill="none" stroke="#121110" stroke-opacity="0.16" stroke-width="2.4"/>
+      <path d="M628.5 98.5 L628.5 121.5 L648.5 110 Z" fill="url(#dvgBox)"/>
+      <g fill="none" stroke="#121110" stroke-opacity="0.22" stroke-width="2"><circle cx="694" cy="96" r="4"/><circle cx="694" cy="118" r="4"/><circle cx="694" cy="140" r="4"/></g>
+      <circle cx="580" cy="176" r="6.5" fill="url(#dvgBox)"/>
+      <rect x="592" y="173" width="56" height="5.5" rx="2.75" fill="#121110" opacity="0.42"/>
+      <rect x="575" y="192" width="120" height="4" rx="2" fill="#121110" opacity="0.12"/>
+      <rect x="575" y="192" width="50" height="4" rx="2" fill="url(#dvgBox)"/>
+
+      <!-- YOUTUBE SHORTS -->
+      <rect x="735" y="40" width="150" height="170" rx="18" fill="#fff" stroke="#121110" stroke-opacity="0.06" filter="url(#dvCard)"/>
+      <g transform="translate(749 53)"><rect x="0" y="0" width="23" height="16" rx="5" fill="url(#dvgBox)"/><path d="M9.3 4.2 L15.6 8 L9.3 11.8 Z" fill="#fff"/></g>
+      <circle cx="810" cy="108" r="23" fill="none" stroke="#121110" stroke-opacity="0.16" stroke-width="2.4"/>
+      <path d="M803.5 96.5 L803.5 119.5 L823.5 108 Z" fill="url(#dvgBox)"/>
+      <g fill="none" stroke="#121110" stroke-opacity="0.22" stroke-width="2"><circle cx="869" cy="98" r="4"/><circle cx="869" cy="120" r="4"/><circle cx="869" cy="142" r="4"/></g>
+      <circle cx="752" cy="180" r="7" fill="url(#dvgBox)"/>
+      <rect x="764" y="172" width="40" height="5.5" rx="2.75" fill="#121110" opacity="0.42"/>
+      <rect x="764" y="183" width="26" height="5" rx="2.5" fill="#121110" opacity="0.2"/>
+      <rect x="816" y="171" width="52" height="17" rx="8.5" fill="none" stroke="url(#dvgBox)" stroke-width="2"/>
+
+      <!-- LINKEDIN POST -->
+      <rect x="910" y="40" width="150" height="170" rx="18" fill="#fff" stroke="#121110" stroke-opacity="0.06" filter="url(#dvCard)"/>
+      <circle cx="934" cy="72" r="12" fill="url(#dvgBox)"/>
+      <rect x="952" y="65" width="54" height="6" rx="3" fill="#121110" opacity="0.5"/>
+      <rect x="952" y="76" width="36" height="5" rx="2.5" fill="#121110" opacity="0.22"/>
+      <g transform="translate(1028 59)" fill="url(#dvgBox)"><path d="M6.94 8.5v9h-3v-9h3Zm.25-3.06a1.69 1.69 0 1 1-3.38 0 1.69 1.69 0 0 1 3.38 0ZM9 8.5h2.88v1.23h.04c.4-.72 1.38-1.48 2.84-1.48 3.04 0 3.6 1.86 3.6 4.28V17.5h-3v-4.4c0-1.05-.02-2.4-1.5-2.4-1.5 0-1.73 1.14-1.73 2.32V17.5H9v-9Z"/></g>
+      <rect x="928" y="102" width="114" height="6" rx="3" fill="#121110" opacity="0.18"/>
+      <rect x="928" y="116" width="104" height="6" rx="3" fill="#121110" opacity="0.18"/>
+      <rect x="928" y="130" width="72" height="6" rx="3" fill="#121110" opacity="0.18"/>
+      <circle cx="933" cy="154" r="6" fill="url(#dvgBox)"/>
+      <rect x="945" y="151" width="30" height="5" rx="2.5" fill="#121110" opacity="0.24"/>
+      <line x1="926" y1="170" x2="1044" y2="170" stroke="#121110" stroke-opacity="0.1" stroke-width="1.4"/>
+      <g><circle cx="936" cy="186" r="4" fill="none" stroke="#121110" stroke-opacity="0.3" stroke-width="1.8"/><rect x="945" y="184" width="22" height="4.5" rx="2.25" fill="#121110" opacity="0.18"/><circle cx="985" cy="186" r="4" fill="none" stroke="#121110" stroke-opacity="0.3" stroke-width="1.8"/><rect x="994" y="184" width="22" height="4.5" rx="2.25" fill="#121110" opacity="0.18"/></g>
+
+      <text x="810" y="238" text-anchor="middle" class="dv-hero2" fill="url(#dvgText2)">Infinite echoes</text>
     </svg>
   </div>
 </section>
@@ -378,6 +406,6 @@
 </footer>
 
 <script src="config.js"></script>
-<script src="app.js?v=20260629"></script>
+<script src="app.js?v=20260629-2"></script>
 </body>
 </html>

@@ -673,8 +673,31 @@ body.loaded .hero__creators{ opacity:1; transform:none; }
 .bigstat__text{ margin-top:10px; color:rgba(243,240,232,.6); font-size:clamp(14px,1.2vw,16px); line-height:1.55; max-width:30ch; }
 @media (max-width:760px){ .bigstats{ grid-template-columns:1fr; gap:42px; } }
 
-/* ---------- WORK CTA ---------- */
-.workcta__inner{ display:flex; align-items:center; justify-content:space-between; gap:28px; flex-wrap:wrap; }
+/* ---------- WORK CTA — highlighted dark band to break up the long light scroll ---------- */
+.workcta{ padding-block:clamp(16px,3vw,38px); }
+.workcta__inner{
+  position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:space-between; gap:clamp(24px,4vw,48px); flex-wrap:wrap;
+  background:var(--night); color:var(--paper);
+  border-radius:clamp(20px,2.4vw,30px);
+  padding:clamp(34px,5vw,68px);
+  box-shadow:0 40px 80px -52px rgba(11,10,17,.6);
+}
+/* soft brand glow in the corners so it reads as a designed panel, not a flat black box */
+.workcta__inner::before{
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(120% 150% at 0% 0%, rgba(255,74,36,.22), transparent 46%),
+    radial-gradient(130% 160% at 100% 110%, rgba(58,43,232,.30), rgba(123,61,255,.12) 38%, transparent 62%);
+}
+.workcta__inner > *{ position:relative; z-index:1; }
+.workcta .section__title{ color:var(--paper); }
+.workcta .section__eyebrow{ color:rgba(243,240,232,.6); margin-bottom:clamp(14px,1.6vw,18px); }
+.workcta .section__eyebrow b{ color:var(--paper); }
+/* gradient CTA that pops on the dark panel; inverts to white on hover */
+.workcta .btn--primary{ background:var(--grad); border-color:transparent; color:#fff; }
+.workcta .btn--primary::before{ background:#fff; }
+.workcta .btn--primary:hover{ color:var(--ink); }
 
 /* ---------- REDUCED MOTION ---------- */
 @media (prefers-reduced-motion: reduce){
@@ -786,6 +809,7 @@ body.loaded .hero__creators{ opacity:1; transform:none; }
 .belief__viz .diffviz{ width:100%; height:auto; display:block; }
 .belief__viz .dv-tag{ font-family:var(--font-mono); font-size:14px; letter-spacing:2.5px; fill:var(--muted); }
 .belief__viz .dv-hero{ font-family:var(--font-display); font-weight:800; font-size:34px; letter-spacing:-.01em; }
+.belief__viz .dv-hero2{ font-family:var(--font-display); font-weight:800; font-size:28px; letter-spacing:-.01em; }
 @media (max-width:640px){
   .belief__viz{ margin-top:clamp(28px,7vw,40px); overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
   .belief__viz::-webkit-scrollbar{ display:none; }
